@@ -5,7 +5,7 @@ from pathlib import Path
 import sys, inspect
 
 class BinaryModel:
-    def __get_types() -> tuple:
+    def __get_types(self) -> tuple:
         types = inspect.getmembers(sys.modules["binarypacker.types"], inspect.isclass)
         out = ()
         for type in types:
