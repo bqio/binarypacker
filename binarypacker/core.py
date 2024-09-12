@@ -1,11 +1,11 @@
 from struct import pack as pk
-from binarytypes import *
+from .types import *
 from pathlib import Path
 
 import sys, inspect
 
 def get_types() -> tuple:
-    _types = inspect.getmembers(sys.modules["binarytypes"], inspect.isclass)
+    _types = inspect.getmembers(sys.modules["binarypacker.types"], inspect.isclass)
     out = ()
     for _type in _types:
         out += (_type[1],)
@@ -25,12 +25,12 @@ def parse_format(obj: object) -> str:
             out += parse_format(obj.__getattribute__(field_name))
     return out
 
-def _pack(obj: object) -> tuple:
+def pack(obj: object) -> tuple:
     buf = ()
     for key in obj.__dict__:
         field = obj.__dict__[key]
         if issubclass(type(field), BinaryModel):
-            buf += _pack(field)
+            buf += pack(field)
         else:
             if isinstance(field, str):
                 buf += (field.encode('utf-8'),)
@@ -39,8 +39,7 @@ def _pack(obj: object) -> tuple:
     return buf
 
 def prepare_pack(obj: object, fmt: str) -> bytes:
-    buf = _pack(obj)
-    print(buf, fmt)
+    buf = pack(obj)
     return pk(fmt, *buf)
 
 class BinaryModel:

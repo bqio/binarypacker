@@ -4,8 +4,8 @@ Simple python binary packer.
 
 #### Usage
 ```python
-from binarypacker import BinaryModel
-from binarytypes import *
+from binarypacker.core import BinaryModel
+from binarypacker.types import *
 
 class Header(BinaryModel):
     flag: UInt8
