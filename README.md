@@ -28,6 +28,7 @@ file.data = 34
 file.filename = "Hello"
 file.header = header
 
+print(file.get_format())
 file.dumpLittle("data.dat")
 ```
 #### Result
