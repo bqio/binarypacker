@@ -2,6 +2,14 @@
 Simple python binary packer.
 
 
+#### Install
+```bash
+py -m venv env
+env/Scripts/activate
+pip install git+https://github.com/bqio/binarypacker.git
+```
+
+
 #### Usage
 ```python
 from binarypacker.core import BinaryModel
