@@ -16,7 +16,11 @@ def parse_format(obj: object) -> str:
     for field_name in obj.__class__.__annotations__:
         field = obj.__class__.__annotations__[field_name]
         if isinstance(field, get_types()):
-            out += str(field)
+            if type(field) == type(UTF8String):
+                _str = obj.__dict__[field_name]
+                out += str(len(_str.encode('utf-8'))) + str(field)
+            else:
+                out += str(field)
         else:
             out += parse_format(obj.__getattribute__(field_name))
     return out
@@ -28,11 +32,15 @@ def _pack(obj: object) -> tuple:
         if issubclass(type(field), BinaryModel):
             buf += _pack(field)
         else:
-            buf += (field,)
+            if isinstance(field, str):
+                buf += (field.encode('utf-8'),)
+            else:
+                buf += (field,)
     return buf
 
 def prepare_pack(obj: object, fmt: str) -> bytes:
     buf = _pack(obj)
+    print(buf, fmt)
     return pk(fmt, *buf)
 
 class BinaryModel:
