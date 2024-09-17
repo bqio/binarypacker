@@ -1,5 +1,5 @@
-### BinaryPacker
-Simple python binary packer.
+### BinaryPacker/Unpacker
+Simple python binary packer/unpacker.
 
 
 #### Install
@@ -12,35 +12,44 @@ pip install git+https://github.com/bqio/binarypacker.git
 
 #### Usage
 ```python
-from binarypacker.core import BinaryModel
+from dataclasses import dataclass
+from binarypacker.core import SerializableObject
+from binarypacker.endian import BigEndian
 from binarypacker.types import *
+    
+@dataclass
+class Table(SerializableObject):
+    ptr: Int8
+    
+@dataclass
+class Header(SerializableObject):
+    offset: Int16
+    table: Table
 
-class Header(BinaryModel):
-    flag: UInt8
-    size: Int64
-    offset: UInt32
-
-class File(BinaryModel):
-    data: Int32
-    filename: UTF8String
+@dataclass
+class File(SerializableObject):
     header: Header
+    age: Int8
+    size: Int8
 
-file = File()
-header = Header()
+table = Table(ptr=120)
+header = Header(offset=24, table=table)
+file = File(header=header, age=2, size=8)
 
-header.flag = 1
-header.size = 2
-header.offset = 16
+serialized_data = file.serialize(endian=BigEndian)
 
-file.data = 34
-file.filename = "Hello"
-file.header = header
+print(serialized_data)
 
-print(file.get_format())
-file.dumpLittle("data.dat")
+file2 = File.deserialize(serialized_data)
+
+print(file2.age, file2.size, type(file2.header.table.ptr))
 ```
-#### Result
+#### Output
 ```
-00000000: 22 00 00 00 48 65 6C 6C  6F 01 02 00 00 00 00 00  "...Hello.......
-00000010: 00 00 10 00 00 00                                 ......
+b'\x00\x18x\x02\x08'
+2 8 <class 'binarypacker.types.Int8'>
 ```
+
+### TODO
+
+* Implement String and NTString serialization/deserialization

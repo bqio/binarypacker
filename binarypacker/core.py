@@ -1,61 +1,67 @@
-from struct import pack as pk
+from dataclasses import dataclass, fields
+from struct import pack, unpack, calcsize
+from typing import TypeVar, Type
+
 from .types import *
-from pathlib import Path
+from .endian import *
 
-import sys, inspect
+T = TypeVar('T', bound='SerializableObject')
 
-class BinaryModel:
-    def __get_types(self) -> tuple:
-        types = inspect.getmembers(sys.modules["binarypacker.types"], inspect.isclass)
-        out = ()
-        for type in types:
-            out += (type[1],)
-        return out
+@dataclass
+class SerializableObject(object):
+    def __post_init__(self) -> None:
+        for field in fields(self):
+            field_type = field.type
+            field_name = field.name
+            field_value = getattr(self, field_name)
 
-    def __parse_format(self, obj: object) -> str:
-        out = ""
-        for field_name in obj.__class__.__annotations__:
-            field = obj.__class__.__annotations__[field_name]
-            if isinstance(field, self.__get_types()):
-                if type(field) == type(UTF8String):
-                    _str = obj.__dict__[field_name]
-                    out += str(len(_str.encode('utf-8'))) + str(field)
-                else:
-                    out += str(field)
+            if issubclass(field_type, SerializableObject):
+                field_value.__post_init__()
+            elif issubclass(field_type, num_types):
+                setattr(self, field_name, field_type(field_value))
             else:
-                out += self.__parse_format(obj.__getattribute__(field_name))
-        return out
-
-    def __prepare_pack(self, obj: object, fmt: str) -> bytes:
-        buf = self.__pack(obj)
-        return pk(fmt, *buf)
+                raise TypeError(f"Unknown type `{field_type}` on field `{field_name}`. Use only library types.\nMaybe you forgot @dataclass decorator or inheritance SerializableObject on `{field_type}`.")
     
-    def __pack(self, obj: object) -> tuple:
-        buf = ()
-        for key in obj.__dict__:
-            field = obj.__dict__[key]
-            if issubclass(type(field), BinaryModel):
-                buf += self.__pack(field)
+    def serialize(self, endian: Endian = LittleEndian) -> bytes:
+        serialized_data = bytearray()
+        for field in fields(self):
+            field_type = field.type
+            field_name = field.name
+            field_value = getattr(self, field_name)
+            
+            if issubclass(field_type, SerializableObject):
+                serialized_data.extend(field_value.serialize(endian))
             else:
-                if isinstance(field, str):
-                    buf += (field.encode('utf-8'),)
-                else:
-                    buf += (field,)
-        return buf
+                field_fmt = f"{endian()}{field_type.fmt()}"
+                serialized_data.extend(pack(field_fmt, field_value))
+        return bytes(serialized_data)
     
-    def get_format(self) -> str:
-        return self.__parse_format(self)
-    
-    def packBig(self) -> bytes:
-        return self.__prepare_pack(self, ">" + self.get_format())
-    
-    def packLittle(self) -> bytes:
-        return self.__prepare_pack(self, "<" + self.get_format())
-    
-    def dumpLittle(self, out_path: Path) -> None:
-        with open(out_path, "wb") as fp:
-            fp.write(self.packLittle())
+    @classmethod
+    def fmt(cls) -> str:
+        fmt = ""
+        for field in fields(cls):
+            field_type = field.type
+            fmt += field_type.fmt()
+        return fmt
 
-    def dumpBig(self, out_path: Path) -> None:
-        with open(out_path, "wb") as fp:
-            fp.write(self.packBig())
+    @classmethod
+    def deserialize(cls: Type[T], serialized_data: bytes, endian: Endian = LittleEndian) -> T:
+        instance = cls.__new__(cls)
+        offset = 0
+        for field in fields(cls):
+            field_type = field.type
+            field_name = field.name
+
+            if issubclass(field_type, SerializableObject):
+                fmt = f"{endian()}{field_type.fmt()}"
+                size = calcsize(fmt)
+                field_value = field_type.deserialize(serialized_data[offset:offset+size], endian)
+                offset += size
+                setattr(instance, field_name, field_value)
+            else:
+                fmt = f"{endian()}{field_type.fmt()}"
+                size = calcsize(fmt)
+                field_value = unpack(fmt, serialized_data[offset:offset+size])[0]
+                offset += size
+                setattr(instance, field_name, field_type(field_value))
+        return instance

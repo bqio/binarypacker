@@ -1,62 +1,62 @@
-class Int8Meta(type):
-    def __str__(self) -> str:
-        return "b"
+class Int8(int):
+    """Represents an 8-bit signed integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'b'
 
-class UInt8Meta(type):
-    def __str__(self) -> str:
-        return "B"
+class UInt8(int):
+    """Represents an 8-bit unsigned integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'B'
 
-class Int16Meta(type):
-    def __str__(self) -> str:
-        return "h"
+class Int16(int):
+    """Represents a 16-bit signed integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'h'
 
-class UInt16Meta(type):
-    def __str__(self) -> str:
-        return "H"
+class UInt16(int):
+    """Represents a 16-bit unsigned integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'H'
 
-class Int32Meta(type):
-    def __str__(self) -> str:
-        return "l"
+class Int32(int):
+    """Represents a 32-bit signed integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'i'
 
-class UInt32Meta(type):
-    def __str__(self) -> str:
-        return "L"
-    
-class Int64Meta(type):
-    def __str__(self) -> str:
-        return "q"
+class UInt32(int):
+    """Represents a 32-bit unsigned integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'I'
 
-class UInt64Meta(type):
-    def __str__(self) -> str:
-        return "Q"
+class Int64(int):
+    """Represents a 64-bit signed integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'q'
 
-class UTF8StringMeta(type):
-    def __str__(self) -> str:
-        return "s"
+class UInt64(int):
+    """Represents a 64-bit unsigned integer."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 'Q'
 
-class Int8(metaclass=Int8Meta):
-    pass
+class String(str):
+    """Represents a variable-length string."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 's'
 
-class UInt8(metaclass=UInt8Meta):
-    pass
+class NTString(str):
+    """Represents a null-terminated string."""
+    @classmethod
+    def fmt(cls) -> str:
+        return 's'
 
-class Int16(metaclass=Int16Meta):
-    pass
-
-class UInt16(metaclass=UInt16Meta):
-    pass
-
-class Int32(metaclass=Int32Meta):
-    pass
-
-class UInt32(metaclass=UInt32Meta):
-    pass
-
-class Int64(metaclass=Int64Meta):
-    pass
-
-class UInt64(metaclass=UInt64Meta):
-    pass
-
-class UTF8String(metaclass=UTF8StringMeta):
-    pass
+num_types = (Int8, Int16, Int32, Int64, UInt8, UInt16, UInt32, UInt64)
+str_types = (String, NTString)
