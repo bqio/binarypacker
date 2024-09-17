@@ -16,6 +16,8 @@ from dataclasses import dataclass
 from binarypacker.core import SerializableObject
 from binarypacker.endian import BigEndian
 from binarypacker.types import *
+
+# @dataclass required
     
 @dataclass
 class Table(SerializableObject):
